@@ -337,6 +337,11 @@ public class HorriblePKBlasterPanel extends JPanel {
 												System.out.println("\t\tUnknown: " + unknown);
 												break;
 											}
+											case 10: {
+												final int unknown = data.getInt();
+												System.out.println("\t\tUnknown: " + unknown);
+												break;
+											}
 											case 16: {
 												final int numberOfFloats = data.getInt();
 												System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
