@@ -291,140 +291,156 @@ public class HorriblePKBlasterPanel extends JPanel {
 			performSwap.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(final ActionEvent e) {
-					if (currentPKB == null) {
-						JOptionPane.showMessageDialog(HorriblePKBlasterPanel.this, "No file loaded!", "Error",
-								JOptionPane.ERROR_MESSAGE);
-					} else {
-						final OldColor newRedIndex = (OldColor) newRedSourceBox.getSelectedItem();
-						final OldColor newGreenIndex = (OldColor) newGreenSourceBox.getSelectedItem();
-						final OldColor newBlueIndex = (OldColor) newBlueSourceBox.getSelectedItem();
-						final OldColor newAlphaIndex = (OldColor) newAlphaSourceBox.getSelectedItem();
-						final List<SwappedColor> swappedColors = new ArrayList<>();
-						for (final PKBChunk chunk : currentPKB.getChunks()) {
-							if (chunk instanceof UnknownChunk) {
-								final UnknownChunk c = (UnknownChunk) chunk;
-								if (currentPKB.getStrings().get(c.getChunkType())
-										.equals("CParticleNodeSamplerData_Curve")) {
-									final ByteBuffer data = c.getChunkData();
-									data.order(ByteOrder.LITTLE_ENDIAN);
-									data.clear();
-									final short groupCount = data.getShort();
-									System.out.println("Curve with groupCount=" + groupCount);
-									for (int groupIndex = 0; groupIndex < groupCount; groupIndex++) {
-										final short groupType = data.getShort();
-										System.out.println("\tGroup " + groupType);
-										switch (groupType) {
-										case 0: {
-											final int unknown1 = data.getInt();
-											final int unknown2 = data.getInt();
-											final int nameStringIndex = data.getInt();
-											System.out.println("\t\tUnknown1: " + unknown1);
-											System.out.println("\t\tUnknown2: " + unknown2);
-											System.out.println(
-													"\t\tName: " + currentPKB.getStrings().get(nameStringIndex));
-											break;
-										}
-										case 7: {
-											final int unknown = data.getInt();
-											final int propertyIndex = data.getInt();
-											System.out.println("\t\tUnknown: " + unknown);
-											System.out.println("\t\tPropertyIndex: " + propertyIndex);
-											break;
-										}
-										case 9: {
-											final int unknown = data.getInt();
-											System.out.println("\t\tUnknown: " + unknown);
-											break;
-										}
-										case 16: {
-											final int numberOfFloats = data.getInt();
-											System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
-											final float[] floats = new float[numberOfFloats];
-											for (int i = 0; i < numberOfFloats; i++) {
-												floats[i] = data.getFloat();
+					try {
+						if (currentPKB == null) {
+							JOptionPane.showMessageDialog(HorriblePKBlasterPanel.this, "No file loaded!", "Error",
+									JOptionPane.ERROR_MESSAGE);
+						} else {
+							final OldColor newRedIndex = (OldColor) newRedSourceBox.getSelectedItem();
+							final OldColor newGreenIndex = (OldColor) newGreenSourceBox.getSelectedItem();
+							final OldColor newBlueIndex = (OldColor) newBlueSourceBox.getSelectedItem();
+							final OldColor newAlphaIndex = (OldColor) newAlphaSourceBox.getSelectedItem();
+							final List<SwappedColor> swappedColors = new ArrayList<>();
+							for (final PKBChunk chunk : currentPKB.getChunks()) {
+								if (chunk instanceof UnknownChunk) {
+									final UnknownChunk c = (UnknownChunk) chunk;
+									if (currentPKB.getStrings().get(c.getChunkType())
+											.equals("CParticleNodeSamplerData_Curve")) {
+										final ByteBuffer data = c.getChunkData();
+										data.order(ByteOrder.LITTLE_ENDIAN);
+										data.clear();
+										final short groupCount = data.getShort();
+										System.out.println("Curve with groupCount=" + groupCount);
+										for (int groupIndex = 0; groupIndex < groupCount; groupIndex++) {
+											final short groupType = data.getShort();
+											System.out.println("\tGroup " + groupType);
+											switch (groupType) {
+											case 0: {
+												final int unknown1 = data.getInt();
+												final int unknown2 = data.getInt();
+												final int nameStringIndex = data.getInt();
+												System.out.println("\t\tUnknown1: " + unknown1);
+												System.out.println("\t\tUnknown2: " + unknown2);
+												System.out.println(
+														"\t\tName: " + currentPKB.getStrings().get(nameStringIndex));
+												break;
 											}
-											System.out.println("\t\t: " + Arrays.toString(floats));
-											break;
-										}
-										case 17: {
-											final int numberOfFloats = data.getInt();
-											System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
-											if (numberOfFloats == 12) {
-												final int floatStartPos = data.position();
-												for (int i = 0; i < 3; i++) {
-													final float oldRed = data.getFloat(floatStartPos + (i * 16) + 0);
-													final float oldGreen = data.getFloat(floatStartPos + (i * 16) + 4);
-													final float oldBlue = data.getFloat(floatStartPos + (i * 16) + 8);
-													final float oldAlpha = data.getFloat(floatStartPos + (i * 16) + 12);
-													final float[] oldColors = { oldRed, oldGreen, oldBlue, oldAlpha };
-													final float newRed = newRedIndex.getValue(oldColors);
-													data.putFloat(floatStartPos + (i * 16), newRed);
-													final float newGreen = newGreenIndex.getValue(oldColors);
-													data.putFloat(floatStartPos + (i * 16) + 4, newGreen);
-													final float newBlue = newBlueIndex.getValue(oldColors);
-													data.putFloat(floatStartPos + (i * 16) + 8, newBlue);
-													final float newAlpha = newAlphaIndex.getValue(oldColors);
-													data.putFloat(floatStartPos + (i * 16) + 12, newAlpha);
-													swappedColors.add(new SwappedColor(
-															createColor(oldRed, oldGreen, oldBlue, oldAlpha),
-															createColor(newRed, newGreen, newBlue, newAlpha)));
+											case 7: {
+												final int unknown = data.getInt();
+												final int propertyIndex = data.getInt();
+												System.out.println("\t\tUnknown: " + unknown);
+												System.out.println("\t\tPropertyIndex: " + propertyIndex);
+												break;
+											}
+											case 9: {
+												final int unknown = data.getInt();
+												System.out.println("\t\tUnknown: " + unknown);
+												break;
+											}
+											case 16: {
+												final int numberOfFloats = data.getInt();
+												System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
+												final float[] floats = new float[numberOfFloats];
+												for (int i = 0; i < numberOfFloats; i++) {
+													floats[i] = data.getFloat();
+												}
+												System.out.println("\t\t: " + Arrays.toString(floats));
+												break;
+											}
+											case 17: {
+												final int numberOfFloats = data.getInt();
+												System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
+												if (numberOfFloats == 12) {
+													final int floatStartPos = data.position();
+													for (int i = 0; i < 3; i++) {
+														final float oldRed = data
+																.getFloat(floatStartPos + (i * 16) + 0);
+														final float oldGreen = data
+																.getFloat(floatStartPos + (i * 16) + 4);
+														final float oldBlue = data
+																.getFloat(floatStartPos + (i * 16) + 8);
+														final float oldAlpha = data
+																.getFloat(floatStartPos + (i * 16) + 12);
+														final float[] oldColors = { oldRed, oldGreen, oldBlue,
+																oldAlpha };
+														final float newRed = newRedIndex.getValue(oldColors);
+														data.putFloat(floatStartPos + (i * 16), newRed);
+														final float newGreen = newGreenIndex.getValue(oldColors);
+														data.putFloat(floatStartPos + (i * 16) + 4, newGreen);
+														final float newBlue = newBlueIndex.getValue(oldColors);
+														data.putFloat(floatStartPos + (i * 16) + 8, newBlue);
+														final float newAlpha = newAlphaIndex.getValue(oldColors);
+														data.putFloat(floatStartPos + (i * 16) + 12, newAlpha);
+														swappedColors.add(new SwappedColor(
+																createColor(oldRed, oldGreen, oldBlue, oldAlpha),
+																createColor(newRed, newGreen, newBlue, newAlpha)));
 
+													}
+													data.position(floatStartPos + (3 * 16));
+												} else {
+													final float[] floats = new float[numberOfFloats];
+													for (int i = 0; i < numberOfFloats; i++) {
+														floats[i] = data.getFloat();
+													}
+													System.out.println("\t\t: " + Arrays.toString(floats));
 												}
-												data.position(floatStartPos + (3 * 16));
-											} else {
-												final float[] floats = new float[numberOfFloats];
-												for (int i = 0; i < numberOfFloats; i++) {
-													floats[i] = data.getFloat();
-												}
-												System.out.println("\t\t: " + Arrays.toString(floats));
+												break;
 											}
-											break;
-										}
-										case 18: {
-											final int numberOfFloats = data.getInt();
-											System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
-											if (numberOfFloats == 24) {
-												final int floatStartPos = data.position();
-												for (int i = 0; i < 6; i++) {
-													final float oldRed = data.getFloat(floatStartPos + (i * 16) + 0);
-													final float oldGreen = data.getFloat(floatStartPos + (i * 16) + 4);
-													final float oldBlue = data.getFloat(floatStartPos + (i * 16) + 8);
-													final float oldAlpha = data.getFloat(floatStartPos + (i * 16) + 12);
-													final float[] oldColors = { oldRed, oldGreen, oldBlue, oldAlpha };
-													final float newRed = newRedIndex.getValue(oldColors);
-													data.putFloat(floatStartPos + (i * 16), newRed);
-													final float newGreen = newGreenIndex.getValue(oldColors);
-													data.putFloat(floatStartPos + (i * 16) + 4, newGreen);
-													final float newBlue = newBlueIndex.getValue(oldColors);
-													data.putFloat(floatStartPos + (i * 16) + 8, newBlue);
-													final float newAlpha = newAlphaIndex.getValue(oldColors);
-													data.putFloat(floatStartPos + (i * 16) + 12, newAlpha);
-													swappedColors.add(new SwappedColor(
-															createColor(oldRed, oldGreen, oldBlue, oldAlpha),
-															createColor(newRed, newGreen, newBlue, newAlpha)));
+											case 18: {
+												final int numberOfFloats = data.getInt();
+												System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
+												if (numberOfFloats == 24) {
+													final int floatStartPos = data.position();
+													for (int i = 0; i < 6; i++) {
+														final float oldRed = data
+																.getFloat(floatStartPos + (i * 16) + 0);
+														final float oldGreen = data
+																.getFloat(floatStartPos + (i * 16) + 4);
+														final float oldBlue = data
+																.getFloat(floatStartPos + (i * 16) + 8);
+														final float oldAlpha = data
+																.getFloat(floatStartPos + (i * 16) + 12);
+														final float[] oldColors = { oldRed, oldGreen, oldBlue,
+																oldAlpha };
+														final float newRed = newRedIndex.getValue(oldColors);
+														data.putFloat(floatStartPos + (i * 16), newRed);
+														final float newGreen = newGreenIndex.getValue(oldColors);
+														data.putFloat(floatStartPos + (i * 16) + 4, newGreen);
+														final float newBlue = newBlueIndex.getValue(oldColors);
+														data.putFloat(floatStartPos + (i * 16) + 8, newBlue);
+														final float newAlpha = newAlphaIndex.getValue(oldColors);
+														data.putFloat(floatStartPos + (i * 16) + 12, newAlpha);
+														swappedColors.add(new SwappedColor(
+																createColor(oldRed, oldGreen, oldBlue, oldAlpha),
+																createColor(newRed, newGreen, newBlue, newAlpha)));
+													}
+													data.position(floatStartPos + (24 * 4));
+												} else {
+													final float[] floats = new float[numberOfFloats];
+													for (int i = 0; i < numberOfFloats; i++) {
+														floats[i] = data.getFloat();
+													}
+													System.out.println("\t\t: " + Arrays.toString(floats));
 												}
-												data.position(floatStartPos + (24 * 4));
-											} else {
-												final float[] floats = new float[numberOfFloats];
-												for (int i = 0; i < numberOfFloats; i++) {
-													floats[i] = data.getFloat();
-												}
-												System.out.println("\t\t: " + Arrays.toString(floats));
+												break;
 											}
-											break;
+											default:
+												throw new IllegalStateException("Unknown group type: " + groupType);
+											}
 										}
-										default:
-											throw new IllegalStateException("Unknown group type: " + groupType);
-										}
+										data.clear();
 									}
-									data.clear();
 								}
 							}
+							final ColorSwapPreviewPanel colorSwapPreviewPanel = new ColorSwapPreviewPanel(
+									swappedColors);
+							final JScrollPane preview = new JScrollPane(colorSwapPreviewPanel);
+							preview.setPreferredSize(new Dimension(800, 600));
+							JOptionPane.showMessageDialog(HorriblePKBlasterPanel.this, preview);
 						}
-						final ColorSwapPreviewPanel colorSwapPreviewPanel = new ColorSwapPreviewPanel(swappedColors);
-						final JScrollPane preview = new JScrollPane(colorSwapPreviewPanel);
-						preview.setPreferredSize(new Dimension(800, 600));
-						JOptionPane.showMessageDialog(HorriblePKBlasterPanel.this, preview);
+					} catch (final Exception exc) {
+						exc.printStackTrace();
+						ExceptionPopup.display(exc);
 					}
 				}
 			});
@@ -485,146 +501,165 @@ public class HorriblePKBlasterPanel extends JPanel {
 			performSwap.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(final ActionEvent e) {
-					if (currentPKB == null) {
-						JOptionPane.showMessageDialog(HorriblePKBlasterPanel.this, "No file loaded!", "Error",
-								JOptionPane.ERROR_MESSAGE);
-					} else {
-						final List<SwappedColor> swappedColors = new ArrayList<>();
-						for (final PKBChunk chunk : currentPKB.getChunks()) {
-							if (chunk instanceof UnknownChunk) {
-								final UnknownChunk c = (UnknownChunk) chunk;
-								if (currentPKB.getStrings().get(c.getChunkType())
-										.equals("CParticleNodeSamplerData_Curve")) {
-									final ByteBuffer data = c.getChunkData();
-									data.order(ByteOrder.LITTLE_ENDIAN);
-									data.clear();
-									final short groupCount = data.getShort();
-									System.out.println("Curve with groupCount=" + groupCount);
-									for (int groupIndex = 0; groupIndex < groupCount; groupIndex++) {
-										final short groupType = data.getShort();
-										System.out.println("\tGroup " + groupType);
-										switch (groupType) {
-										case 0: {
-											final int unknown1 = data.getInt();
-											final int unknown2 = data.getInt();
-											final int nameStringIndex = data.getInt();
-											System.out.println("\t\tUnknown1: " + unknown1);
-											System.out.println("\t\tUnknown2: " + unknown2);
-											System.out.println(
-													"\t\tName: " + currentPKB.getStrings().get(nameStringIndex));
-											break;
-										}
-										case 7: {
-											final int unknown = data.getInt();
-											final int propertyIndex = data.getInt();
-											System.out.println("\t\tUnknown: " + unknown);
-											System.out.println("\t\tPropertyIndex: " + propertyIndex);
-											break;
-										}
-										case 9: {
-											final int unknown = data.getInt();
-											System.out.println("\t\tUnknown: " + unknown);
-											break;
-										}
-										case 16: {
-											final int numberOfFloats = data.getInt();
-											System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
-											final float[] floats = new float[numberOfFloats];
-											for (int i = 0; i < numberOfFloats; i++) {
-												floats[i] = data.getFloat();
+					try {
+						if (currentPKB == null) {
+							JOptionPane.showMessageDialog(HorriblePKBlasterPanel.this, "No file loaded!", "Error",
+									JOptionPane.ERROR_MESSAGE);
+						} else {
+							final List<SwappedColor> swappedColors = new ArrayList<>();
+							for (final PKBChunk chunk : currentPKB.getChunks()) {
+								if (chunk instanceof UnknownChunk) {
+									final UnknownChunk c = (UnknownChunk) chunk;
+									if (currentPKB.getStrings().get(c.getChunkType())
+											.equals("CParticleNodeSamplerData_Curve")) {
+										final ByteBuffer data = c.getChunkData();
+										data.order(ByteOrder.LITTLE_ENDIAN);
+										data.clear();
+										final short groupCount = data.getShort();
+										System.out.println("Curve with groupCount=" + groupCount);
+										for (int groupIndex = 0; groupIndex < groupCount; groupIndex++) {
+											final short groupType = data.getShort();
+											System.out.println("\tGroup " + groupType);
+											switch (groupType) {
+											case 0: {
+												final int unknown1 = data.getInt();
+												final int unknown2 = data.getInt();
+												final int nameStringIndex = data.getInt();
+												System.out.println("\t\tUnknown1: " + unknown1);
+												System.out.println("\t\tUnknown2: " + unknown2);
+												System.out.println(
+														"\t\tName: " + currentPKB.getStrings().get(nameStringIndex));
+												break;
 											}
-											System.out.println("\t\t: " + Arrays.toString(floats));
-											break;
-										}
-										case 17: {
-											final int numberOfFloats = data.getInt();
-											System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
-											if (numberOfFloats == 12) {
-												final int floatStartPos = data.position();
-												for (int i = 0; i < 3; i++) {
-													final float oldRed = data.getFloat(floatStartPos + (i * 16) + 0);
-													final float oldGreen = data.getFloat(floatStartPos + (i * 16) + 4);
-													final float oldBlue = data.getFloat(floatStartPos + (i * 16) + 8);
-													final float avgColor = (oldRed + oldGreen + oldBlue) / 3;
-													final float newFactor = Math.signum(avgColor)
-															* Math.max(Math.max(Math.abs(oldRed), Math.abs(oldGreen)),
-																	Math.abs(oldBlue));
-
-													final float oldAlpha = data.getFloat(floatStartPos + (i * 16) + 12);
-													final float newRed = (newFactor * currentColorizeColor.getRed())
-															/ 255f;
-													data.putFloat(floatStartPos + (i * 16), newRed);
-													final float newGreen = (newFactor * currentColorizeColor.getGreen())
-															/ 255f;
-													data.putFloat(floatStartPos + (i * 16) + 4, newGreen);
-													final float newBlue = (newFactor * currentColorizeColor.getBlue())
-															/ 255f;
-													data.putFloat(floatStartPos + (i * 16) + 8, newBlue);
-													swappedColors.add(new SwappedColor(
-															createColor(oldRed, oldGreen, oldBlue, oldAlpha),
-															createColor(newRed, newGreen, newBlue, oldAlpha)));
-
-												}
-												data.position(floatStartPos + (3 * 16));
-											} else {
+											case 7: {
+												final int unknown = data.getInt();
+												final int propertyIndex = data.getInt();
+												System.out.println("\t\tUnknown: " + unknown);
+												System.out.println("\t\tPropertyIndex: " + propertyIndex);
+												break;
+											}
+											case 9: {
+												final int unknown = data.getInt();
+												System.out.println("\t\tUnknown: " + unknown);
+												break;
+											}
+											case 10: {
+												final int unknown = data.getInt();
+												System.out.println("\t\tUnknown: " + unknown);
+												break;
+											}
+											case 16: {
+												final int numberOfFloats = data.getInt();
+												System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
 												final float[] floats = new float[numberOfFloats];
 												for (int i = 0; i < numberOfFloats; i++) {
 													floats[i] = data.getFloat();
 												}
 												System.out.println("\t\t: " + Arrays.toString(floats));
+												break;
 											}
-											break;
-										}
-										case 18: {
-											final int numberOfFloats = data.getInt();
-											System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
-											if (numberOfFloats == 24) {
-												final int floatStartPos = data.position();
-												for (int i = 0; i < 6; i++) {
-													final float oldRed = data.getFloat(floatStartPos + (i * 16) + 0);
-													final float oldGreen = data.getFloat(floatStartPos + (i * 16) + 4);
-													final float oldBlue = data.getFloat(floatStartPos + (i * 16) + 8);
-													final float avgColor = (oldRed + oldGreen + oldBlue) / 3;
-													final float newFactor = Math.signum(avgColor)
-															* Math.max(Math.max(Math.abs(oldRed), Math.abs(oldGreen)),
-																	Math.abs(oldBlue));
+											case 17: {
+												final int numberOfFloats = data.getInt();
+												System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
+												if (numberOfFloats == 12) {
+													final int floatStartPos = data.position();
+													for (int i = 0; i < 3; i++) {
+														final float oldRed = data
+																.getFloat(floatStartPos + (i * 16) + 0);
+														final float oldGreen = data
+																.getFloat(floatStartPos + (i * 16) + 4);
+														final float oldBlue = data
+																.getFloat(floatStartPos + (i * 16) + 8);
+														final float avgColor = (oldRed + oldGreen + oldBlue) / 3;
+														final float newFactor = Math.signum(avgColor) * Math.max(
+																Math.max(Math.abs(oldRed), Math.abs(oldGreen)),
+																Math.abs(oldBlue));
 
-													final float oldAlpha = data.getFloat(floatStartPos + (i * 16) + 12);
-													final float newRed = (newFactor * currentColorizeColor.getRed())
-															/ 255f;
-													data.putFloat(floatStartPos + (i * 16), newRed);
-													final float newGreen = (newFactor * currentColorizeColor.getGreen())
-															/ 255f;
-													data.putFloat(floatStartPos + (i * 16) + 4, newGreen);
-													final float newBlue = (newFactor * currentColorizeColor.getBlue())
-															/ 255f;
-													data.putFloat(floatStartPos + (i * 16) + 8, newBlue);
-													swappedColors.add(new SwappedColor(
-															createColor(oldRed, oldGreen, oldBlue, oldAlpha),
-															createColor(newRed, newGreen, newBlue, oldAlpha)));
+														final float oldAlpha = data
+																.getFloat(floatStartPos + (i * 16) + 12);
+														final float newRed = (newFactor * currentColorizeColor.getRed())
+																/ 255f;
+														data.putFloat(floatStartPos + (i * 16), newRed);
+														final float newGreen = (newFactor
+																* currentColorizeColor.getGreen()) / 255f;
+														data.putFloat(floatStartPos + (i * 16) + 4, newGreen);
+														final float newBlue = (newFactor
+																* currentColorizeColor.getBlue()) / 255f;
+														data.putFloat(floatStartPos + (i * 16) + 8, newBlue);
+														swappedColors.add(new SwappedColor(
+																createColor(oldRed, oldGreen, oldBlue, oldAlpha),
+																createColor(newRed, newGreen, newBlue, oldAlpha)));
+
+													}
+													data.position(floatStartPos + (3 * 16));
+												} else {
+													final float[] floats = new float[numberOfFloats];
+													for (int i = 0; i < numberOfFloats; i++) {
+														floats[i] = data.getFloat();
+													}
+													System.out.println("\t\t: " + Arrays.toString(floats));
 												}
-												data.position(floatStartPos + (24 * 4));
-											} else {
-												final float[] floats = new float[numberOfFloats];
-												for (int i = 0; i < numberOfFloats; i++) {
-													floats[i] = data.getFloat();
-												}
-												System.out.println("\t\t: " + Arrays.toString(floats));
+												break;
 											}
-											break;
+											case 18: {
+												final int numberOfFloats = data.getInt();
+												System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
+												if (numberOfFloats == 24) {
+													final int floatStartPos = data.position();
+													for (int i = 0; i < 6; i++) {
+														final float oldRed = data
+																.getFloat(floatStartPos + (i * 16) + 0);
+														final float oldGreen = data
+																.getFloat(floatStartPos + (i * 16) + 4);
+														final float oldBlue = data
+																.getFloat(floatStartPos + (i * 16) + 8);
+														final float avgColor = (oldRed + oldGreen + oldBlue) / 3;
+														final float newFactor = Math.signum(avgColor) * Math.max(
+																Math.max(Math.abs(oldRed), Math.abs(oldGreen)),
+																Math.abs(oldBlue));
+
+														final float oldAlpha = data
+																.getFloat(floatStartPos + (i * 16) + 12);
+														final float newRed = (newFactor * currentColorizeColor.getRed())
+																/ 255f;
+														data.putFloat(floatStartPos + (i * 16), newRed);
+														final float newGreen = (newFactor
+																* currentColorizeColor.getGreen()) / 255f;
+														data.putFloat(floatStartPos + (i * 16) + 4, newGreen);
+														final float newBlue = (newFactor
+																* currentColorizeColor.getBlue()) / 255f;
+														data.putFloat(floatStartPos + (i * 16) + 8, newBlue);
+														swappedColors.add(new SwappedColor(
+																createColor(oldRed, oldGreen, oldBlue, oldAlpha),
+																createColor(newRed, newGreen, newBlue, oldAlpha)));
+													}
+													data.position(floatStartPos + (24 * 4));
+												} else {
+													final float[] floats = new float[numberOfFloats];
+													for (int i = 0; i < numberOfFloats; i++) {
+														floats[i] = data.getFloat();
+													}
+													System.out.println("\t\t: " + Arrays.toString(floats));
+												}
+												break;
+											}
+											default:
+												throw new IllegalStateException("Unknown group type: " + groupType);
+											}
 										}
-										default:
-											throw new IllegalStateException("Unknown group type: " + groupType);
-										}
+										data.clear();
 									}
-									data.clear();
 								}
 							}
+							final ColorSwapPreviewPanel colorSwapPreviewPanel = new ColorSwapPreviewPanel(
+									swappedColors);
+							final JScrollPane preview = new JScrollPane(colorSwapPreviewPanel);
+							preview.setPreferredSize(new Dimension(800, 600));
+							JOptionPane.showMessageDialog(HorriblePKBlasterPanel.this, preview);
 						}
-						final ColorSwapPreviewPanel colorSwapPreviewPanel = new ColorSwapPreviewPanel(swappedColors);
-						final JScrollPane preview = new JScrollPane(colorSwapPreviewPanel);
-						preview.setPreferredSize(new Dimension(800, 600));
-						JOptionPane.showMessageDialog(HorriblePKBlasterPanel.this, preview);
+					} catch (final Exception exc) {
+						exc.printStackTrace();
+						ExceptionPopup.display(exc);
 					}
 				}
 			});
