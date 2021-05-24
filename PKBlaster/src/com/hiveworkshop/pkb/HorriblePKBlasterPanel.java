@@ -342,6 +342,11 @@ public class HorriblePKBlasterPanel extends JPanel {
 												System.out.println("\t\tUnknown: " + unknown);
 												break;
 											}
+											case 14: {
+												final int unknown = data.getInt();
+												System.out.println("\t\tUnknown: " + unknown);
+												break;
+											}
 											case 16: {
 												final int numberOfFloats = data.getInt();
 												System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
@@ -553,6 +558,11 @@ public class HorriblePKBlasterPanel extends JPanel {
 												System.out.println("\t\tUnknown: " + unknown);
 												break;
 											}
+											case 14: {
+												final int unknown = data.getInt();
+												System.out.println("\t\tUnknown: " + unknown);
+												break;
+											}
 											case 16: {
 												final int numberOfFloats = data.getInt();
 												System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
@@ -753,8 +763,9 @@ public class HorriblePKBlasterPanel extends JPanel {
 					if (selectedFile != null) {
 
 						final ByteBuffer stupidBuffer2 = currentPKB.toBuffer();
-						try (FileChannel channel = FileChannel.open(selectedFile.toPath(),
-								StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
+						try (FileChannel channel = FileChannel.open(selectedFile.toPath(), StandardOpenOption.CREATE,
+								StandardOpenOption.WRITE)) {
+							channel.truncate(0);
 							stupidBuffer2.clear();
 							channel.write(stupidBuffer2);
 						} catch (final IOException e1) {
