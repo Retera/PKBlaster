@@ -435,6 +435,16 @@ public class HorriblePKBlasterPanel extends JPanel {
 												}
 												break;
 											}
+											case 19: {
+												final int numberOfFloats = data.getInt();
+												System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
+												final float[] floats = new float[numberOfFloats];
+												for (int i = 0; i < numberOfFloats; i++) {
+													floats[i] = data.getFloat();
+												}
+												System.out.println("\t\t: " + Arrays.toString(floats));
+												break;
+											}
 											default:
 												throw new IllegalStateException("Unknown group type: " + groupType);
 											}
@@ -651,6 +661,36 @@ public class HorriblePKBlasterPanel extends JPanel {
 																createColor(newRed, newGreen, newBlue, oldAlpha)));
 													}
 													data.position(floatStartPos + (24 * 4));
+												} else if (numberOfFloats == 20) {
+													final int floatStartPos = data.position();
+													for (int i = 0; i < 5; i++) {
+														final float oldRed = data
+																.getFloat(floatStartPos + (i * 16) + 0);
+														final float oldGreen = data
+																.getFloat(floatStartPos + (i * 16) + 4);
+														final float oldBlue = data
+																.getFloat(floatStartPos + (i * 16) + 8);
+														final float avgColor = (oldRed + oldGreen + oldBlue) / 3;
+														final float newFactor = Math.signum(avgColor) * Math.max(
+																Math.max(Math.abs(oldRed), Math.abs(oldGreen)),
+																Math.abs(oldBlue));
+
+														final float oldAlpha = data
+																.getFloat(floatStartPos + (i * 16) + 12);
+														final float newRed = (newFactor * currentColorizeColor.getRed())
+																/ 255f;
+														data.putFloat(floatStartPos + (i * 16), newRed);
+														final float newGreen = (newFactor
+																* currentColorizeColor.getGreen()) / 255f;
+														data.putFloat(floatStartPos + (i * 16) + 4, newGreen);
+														final float newBlue = (newFactor
+																* currentColorizeColor.getBlue()) / 255f;
+														data.putFloat(floatStartPos + (i * 16) + 8, newBlue);
+														swappedColors.add(new SwappedColor(
+																createColor(oldRed, oldGreen, oldBlue, oldAlpha),
+																createColor(newRed, newGreen, newBlue, oldAlpha)));
+													}
+													data.position(floatStartPos + (20 * 4));
 												} else {
 													final float[] floats = new float[numberOfFloats];
 													for (int i = 0; i < numberOfFloats; i++) {
@@ -658,6 +698,16 @@ public class HorriblePKBlasterPanel extends JPanel {
 													}
 													System.out.println("\t\t: " + Arrays.toString(floats));
 												}
+												break;
+											}
+											case 19: {
+												final int numberOfFloats = data.getInt();
+												System.out.println("\t\tnumberOfFloats: " + numberOfFloats);
+												final float[] floats = new float[numberOfFloats];
+												for (int i = 0; i < numberOfFloats; i++) {
+													floats[i] = data.getFloat();
+												}
+												System.out.println("\t\t: " + Arrays.toString(floats));
 												break;
 											}
 											default:
