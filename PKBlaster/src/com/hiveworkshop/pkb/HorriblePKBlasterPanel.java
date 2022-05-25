@@ -315,7 +315,8 @@ public class HorriblePKBlasterPanel extends JPanel {
 											final short groupType = data.getShort();
 											System.out.println("\tGroup " + groupType);
 											switch (groupType) {
-											case 0: {
+											case 0:
+											case 1: {
 												final int unknown1 = data.getInt();
 												final int unknown2 = data.getInt();
 												final int nameStringIndex = data.getInt();
@@ -531,7 +532,8 @@ public class HorriblePKBlasterPanel extends JPanel {
 											final short groupType = data.getShort();
 											System.out.println("\tGroup " + groupType);
 											switch (groupType) {
-											case 0: {
+											case 0:
+											case 1: {
 												final int unknown1 = data.getInt();
 												final int unknown2 = data.getInt();
 												final int nameStringIndex = data.getInt();
