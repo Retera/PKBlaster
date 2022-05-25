@@ -153,6 +153,7 @@ public class HorriblePKBlasterPanel extends JPanel {
 				boolean color = false;
 				boolean color2 = false;
 				boolean color3 = false;
+				boolean color4 = false;
 				if (value instanceof Integer) {
 					final Integer x = (Integer) value;
 					if ((column == 3) && (((x >= 0) && (x < nodeListModel.size())))) {
@@ -166,6 +167,11 @@ public class HorriblePKBlasterPanel extends JPanel {
 						color2 = true;
 						value = value + " (" + stringListModel.get(x) + ")";
 					}
+				} else if (value instanceof Float) {
+					final Float x = (Float) value;
+					if ((x == 0.0f) || ((x >= 0.01) && (x <= 1))) {
+						color4 = true;
+					}
 				}
 				final Component tableCellRendererComponent = super.getTableCellRendererComponent(table, value,
 						isSelected, hasFocus, row, column);
@@ -175,6 +181,8 @@ public class HorriblePKBlasterPanel extends JPanel {
 					setBackground(Color.CYAN);
 				} else if (color2) {
 					setBackground(Color.YELLOW);
+				} else if (color4) {
+					setBackground(Color.ORANGE);
 				} else {
 					setBackground(null);
 				}
@@ -343,6 +351,11 @@ public class HorriblePKBlasterPanel extends JPanel {
 												System.out.println("\t\tUnknown: " + unknown);
 												break;
 											}
+											case 11: {
+												final int unknown = data.getInt();
+												System.out.println("\t\tUnknown: " + unknown);
+												break;
+											}
 											case 14: {
 												final int unknown = data.getInt();
 												System.out.println("\t\tUnknown: " + unknown);
@@ -426,6 +439,32 @@ public class HorriblePKBlasterPanel extends JPanel {
 																createColor(newRed, newGreen, newBlue, newAlpha)));
 													}
 													data.position(floatStartPos + (24 * 4));
+												} else if (numberOfFloats == 20) {
+													final int floatStartPos = data.position();
+													for (int i = 0; i < 5; i++) {
+														final float oldRed = data
+																.getFloat(floatStartPos + (i * 16) + 0);
+														final float oldGreen = data
+																.getFloat(floatStartPos + (i * 16) + 4);
+														final float oldBlue = data
+																.getFloat(floatStartPos + (i * 16) + 8);
+														final float oldAlpha = data
+																.getFloat(floatStartPos + (i * 16) + 12);
+														final float[] oldColors = { oldRed, oldGreen, oldBlue,
+																oldAlpha };
+														final float newRed = newRedIndex.getValue(oldColors);
+														data.putFloat(floatStartPos + (i * 16), newRed);
+														final float newGreen = newGreenIndex.getValue(oldColors);
+														data.putFloat(floatStartPos + (i * 16) + 4, newGreen);
+														final float newBlue = newBlueIndex.getValue(oldColors);
+														data.putFloat(floatStartPos + (i * 16) + 8, newBlue);
+														final float newAlpha = newAlphaIndex.getValue(oldColors);
+														data.putFloat(floatStartPos + (i * 16) + 12, newAlpha);
+														swappedColors.add(new SwappedColor(
+																createColor(oldRed, oldGreen, oldBlue, oldAlpha),
+																createColor(newRed, newGreen, newBlue, newAlpha)));
+													}
+													data.position(floatStartPos + (20 * 4));
 												} else {
 													final float[] floats = new float[numberOfFloats];
 													for (int i = 0; i < numberOfFloats; i++) {
@@ -566,6 +605,11 @@ public class HorriblePKBlasterPanel extends JPanel {
 												break;
 											}
 											case 10: {
+												final int unknown = data.getInt();
+												System.out.println("\t\tUnknown: " + unknown);
+												break;
+											}
+											case 11: {
 												final int unknown = data.getInt();
 												System.out.println("\t\tUnknown: " + unknown);
 												break;
