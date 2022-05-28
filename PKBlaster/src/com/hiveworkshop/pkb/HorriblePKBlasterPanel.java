@@ -102,6 +102,7 @@ public class HorriblePKBlasterPanel extends JPanel {
 	private final JList<PKBChunk> nodesList;
 
 	private final JLabel nodeLabel;
+	private final JLabel infoLabel;
 
 	private Color currentColorizeColor = Color.WHITE;
 
@@ -143,6 +144,8 @@ public class HorriblePKBlasterPanel extends JPanel {
 		final JPanel editNodePanel = new JPanel();
 		nodeLabel = new JLabel("Select a node....");
 		editNodePanel.add(nodeLabel);
+		infoLabel = new JLabel("");
+		editNodePanel.add(infoLabel);
 
 //		final JPanel unknownChunkPanel = new JPanel();
 		final JTable unknownChunkTable = new JTable();
@@ -189,13 +192,24 @@ public class HorriblePKBlasterPanel extends JPanel {
 				return tableCellRendererComponent;
 			}
 		});
+		unknownChunkTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(final ListSelectionEvent e) {
+				infoLabel.setText("Selection: " + unknownChunkTable.getSelectedRow());
+			}
+		});
 		final JScrollPane tableScrollPane = new JScrollPane(unknownChunkTable);
 		final GroupLayout editNodeLayout = new GroupLayout(editNodePanel);
 		editNodePanel.setLayout(editNodeLayout);
-		editNodeLayout.setHorizontalGroup(
-				editNodeLayout.createParallelGroup().addComponent(nodeLabel).addComponent(tableScrollPane));
-		editNodeLayout.setVerticalGroup(
-				editNodeLayout.createSequentialGroup().addComponent(nodeLabel).addComponent(tableScrollPane));
+		editNodeLayout
+				.setHorizontalGroup(
+						editNodeLayout
+								.createParallelGroup().addGroup(editNodeLayout.createSequentialGroup()
+										.addComponent(nodeLabel).addGap(16).addComponent(infoLabel))
+								.addComponent(tableScrollPane));
+		editNodeLayout.setVerticalGroup(editNodeLayout.createSequentialGroup()
+				.addGroup(editNodeLayout.createParallelGroup().addComponent(nodeLabel).addComponent(infoLabel))
+				.addComponent(tableScrollPane));
 		editNodePanel.add(tableScrollPane);
 
 		nodesList.addListSelectionListener(new ListSelectionListener() {
@@ -570,8 +584,8 @@ public class HorriblePKBlasterPanel extends JPanel {
 							for (final PKBChunk chunk : currentPKB.getChunks()) {
 								if (chunk instanceof UnknownChunk) {
 									final UnknownChunk c = (UnknownChunk) chunk;
-									if (currentPKB.getStrings().get(c.getChunkType())
-											.equals("CParticleNodeSamplerData_Curve")) {
+									final String chunkTypeName = currentPKB.getStrings().get(c.getChunkType());
+									if (chunkTypeName.equals("CParticleNodeSamplerData_Curve")) {
 										final ByteBuffer data = c.getChunkData();
 										data.order(ByteOrder.LITTLE_ENDIAN);
 										data.clear();
@@ -755,7 +769,132 @@ public class HorriblePKBlasterPanel extends JPanel {
 												break;
 											}
 											default:
-												throw new IllegalStateException("Unknown group type: " + groupType);
+												throw new IllegalStateException(
+														"Unknown group type in 'CParticleNodeSamplerData_Curve': "
+																+ groupType);
+											}
+										}
+										data.clear();
+									} else if (chunkTypeName.equals("CLayerCompileCache")) {
+										final ByteBuffer data = c.getChunkData();
+										data.order(ByteOrder.LITTLE_ENDIAN);
+										data.clear();
+										final short groupCount = data.getShort();
+										System.out.println("CLayerCompileCache with groupCount=" + groupCount);
+										for (int groupIndex = 0; groupIndex < groupCount; groupIndex++) {
+											final short groupType = data.getShort();
+											System.out.println("\tGroup " + groupType);
+											switch (groupType) {
+											case 0:
+											case 1: {
+												final int numberOfGroups = data.getInt();
+												System.out.println("\t\tnumberOfGroups: " + numberOfGroups);
+//												final float[][] floats = new float[numberOfGroups][4];
+//												for (int i = 0; i < numberOfGroups; i++) {
+//													for (int j = 0; j < 4; j++) {
+//														floats[i][j] = data.getFloat();
+//													}
+//												}
+//												System.out.println("\t\t: " + Arrays.toString(floats));
+												final int floatStartPos = data.position();
+												for (int i = 0; i < numberOfGroups; i++) {
+													final float oldRed = data.getFloat(floatStartPos + (i * 16) + 0);
+													final float oldGreen = data.getFloat(floatStartPos + (i * 16) + 4);
+													final float oldBlue = data.getFloat(floatStartPos + (i * 16) + 8);
+													final float oldAlpha = data.getFloat(floatStartPos + (i * 16) + 12);
+													if ((oldRed == oldGreen) && (oldGreen == oldBlue)) {
+														continue;
+													} else if ((oldRed > 1.0f) || (oldGreen > 1.0f) || (oldBlue > 1.0f)
+															|| (oldAlpha > 1.0f)) {
+														continue;
+													} else if (((oldRed > 0.0f) && (oldRed < 0.001f))
+															|| ((oldGreen > 0.0f) && (oldGreen < 0.001f))
+															|| ((oldBlue > 0.0f) && (oldBlue < 0.001f))
+															|| ((oldAlpha > 0.0f) && (oldAlpha < 0.001f))) {
+														continue;
+													} else if ((oldRed < 0.0f) || (oldGreen < 0.0f)
+															|| (oldBlue < 0.0f)) {
+														continue;
+													}
+													final float avgColor = (oldRed + oldGreen + oldBlue) / 3;
+													final float newFactor = Math.signum(avgColor)
+															* Math.max(Math.max(Math.abs(oldRed), Math.abs(oldGreen)),
+																	Math.abs(oldBlue));
+
+													final float newRed = (newFactor * currentColorizeColor.getRed())
+															/ 255f;
+													data.putFloat(floatStartPos + (i * 16), newRed);
+													final float newGreen = (newFactor * currentColorizeColor.getGreen())
+															/ 255f;
+													data.putFloat(floatStartPos + (i * 16) + 4, newGreen);
+													final float newBlue = (newFactor * currentColorizeColor.getBlue())
+															/ 255f;
+													data.putFloat(floatStartPos + (i * 16) + 8, newBlue);
+													swappedColors.add(new SwappedColor(
+															createColor(oldRed, oldGreen, oldBlue, oldAlpha),
+															createColor(newRed, newGreen, newBlue, oldAlpha)));
+												}
+												data.position(floatStartPos + (numberOfGroups * 16));
+
+												break;
+											}
+											case 2:
+											case 3:
+											case 5:
+											case 7:
+											case 8:
+											case 9: {
+												final int numberOfInts = data.getInt();
+												System.out.println("\t\tnumberOfInts: " + numberOfInts);
+												final int[] ints = new int[numberOfInts];
+												for (int i = 0; i < numberOfInts; i++) {
+													ints[i] = data.getInt();
+												}
+												System.out.println("\t\t: " + Arrays.toString(ints));
+												break;
+											}
+											case 11:
+											case 12:
+											case 16:
+											case 17:
+											case 18:
+											case 20:
+											case 21:
+											case 24:
+											case 25:
+											case 31: {
+												final int unknown = data.getInt();
+												System.out.println("\t\tUnknown: " + unknown);
+												break;
+											}
+											case 19: {
+												final int unknown1 = data.getInt();
+												final int unknown2 = data.getInt();
+												final int unknown3 = data.getInt();
+												final int unknown4 = data.getInt();
+												System.out.println("\t\tUnknown1: " + unknown1);
+												System.out.println("\t\tUnknown2: " + unknown2);
+												System.out.println("\t\tUnknown3: " + unknown3);
+												System.out.println("\t\tUnknown4: " + unknown4);
+												break;
+											}
+											case 13:
+											case 14:
+											case 15: {
+												final int unknown = data.get();
+												System.out.println("\t\tUnknown: " + unknown);
+												break;
+											}
+											case 27:
+											case 28:
+											case 30: {
+												final float unknown = data.getFloat();
+												System.out.println("\t\tUnknown: " + unknown);
+												break;
+											}
+											default:
+												throw new IllegalStateException(
+														"Unknown group type in 'CLayerCompileCache': " + groupType);
 											}
 										}
 										data.clear();

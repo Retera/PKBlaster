@@ -24,7 +24,7 @@ public class HorriblePkbParser {
 	private final int someResurrectedIdentifier;
 	private final List<String> strings = new ArrayList<>();
 	private final List<PKBChunk> chunks = new ArrayList<>();
-	private final int[] resurrectBuffer = new int[39];
+	private final int[] resurrectBuffer;
 	private final int firstMagicIdentifier;
 	private final long secondMagicIdentifier;
 
@@ -75,14 +75,21 @@ public class HorriblePkbParser {
 		System.out.println("Finished reading strings at: " + buffer.position());
 		System.out.println("Finished with remaining: " + buffer.remaining());
 		buffer.position(initialPosition);
-		secondMagicIdentifier = buffer.getLong();
+		if (this.resurrected) {
+			secondMagicIdentifier = buffer.getInt();
+		} else {
+			secondMagicIdentifier = buffer.getLong();
+		}
 		System.out.println("firstmagic: " + firstMagicIdentifier);
 		System.out.println("strings offset: " + stringDataOffset);
 		System.out.println("secondmagic: " + secondMagicIdentifier);
 		if (this.resurrected) {
+			resurrectBuffer = new int[someResurrectedIdentifier * 2];
 			for (int i = 0; i < resurrectBuffer.length; i++) {
 				resurrectBuffer[i] = buffer.getInt(); // Read some 39 DWORDs, whatever it is
 			}
+		} else {
+			resurrectBuffer = null;
 		}
 		while (buffer.position() < stringDataOffset) {
 			final int length = buffer.getInt();
@@ -132,9 +139,11 @@ public class HorriblePkbParser {
 			byteLength += 4; // some resurrect magic
 		}
 		byteLength += 4; // string offset location info
-		byteLength += 8; // second magic
 		if (this.resurrected) {
+			byteLength += 4;
 			byteLength += resurrectBuffer.length * 4;
+		} else {
+			byteLength += 8; // second magic
 		}
 		for (final PKBChunk chunk : chunks) {
 			byteLength += chunk.getByteLength() + 9;
@@ -159,11 +168,13 @@ public class HorriblePkbParser {
 			buffer.putInt(someResurrectedIdentifier);
 		}
 		buffer.putInt(stringsOffset);
-		buffer.putLong(secondMagicIdentifier);
 		if (this.resurrected) {
+			buffer.putInt((int) secondMagicIdentifier);
 			for (int i = 0; i < resurrectBuffer.length; i++) {
 				buffer.putInt(resurrectBuffer[i]);
 			}
+		} else {
+			buffer.putLong(secondMagicIdentifier);
 		}
 		for (final PKBChunk chunk : chunks) {
 			buffer.putInt(chunk.getByteLength() + 5);
