@@ -12,7 +12,7 @@ public class HorriblePKBlasterMain {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				final JFrame mainFrame = new JFrame("Horrible PKBlaster PKB Editor!!!!111 (v0.04)");
+				final JFrame mainFrame = new JFrame("Horrible PKBlaster PKB Editor!!!!111 (v0.05)");
 				mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 				final HorriblePKBlasterPanel panel = new HorriblePKBlasterPanel();
 				mainFrame.setContentPane(panel);

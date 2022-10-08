@@ -12,15 +12,8 @@ import java.util.TreeSet;
 import com.hiveworkshop.wc3.units.objectdata.War3ID;
 
 public class HorriblePkbParser {
-	private static final int MAGIC_KEY_1 = 0xc9000b11;
-	private static final int MAGIC_KEY_2 = 0x01040202;
-	private static final int MAGIC_KEY_3 = 0x0000e14a;
-
-	private static final int RESURRECT_MAGIC_KEY_1 = 0xca000b11;
-	private static final int RESURRECT_MAGIC_KEY_2 = 0x01050902;
-	private static final int RESURRECT_MAGIC_KEY_3 = 0x00001f40;
 	public static final Map<Integer, Set<Integer>> MESSAGE_TYPES_TO_LENS = new TreeMap<>();
-	private final boolean resurrected;
+	private final PKBVersion pkbVersion;
 	private final int someResurrectedIdentifier;
 	private final List<String> strings = new ArrayList<>();
 	private final List<PKBChunk> chunks = new ArrayList<>();
@@ -34,27 +27,18 @@ public class HorriblePkbParser {
 		final int key1 = buffer.getInt();
 		final int key2 = buffer.getInt();
 		final int key3 = buffer.getInt();
-		boolean resurrected = false;
-		if (key1 != MAGIC_KEY_1) {
-			if (key1 != RESURRECT_MAGIC_KEY_1) {
-				throw new IllegalStateException("Illegal magic key1=" + key1);
-			} else {
-				resurrected = true;
+		PKBVersion pkbVersion = null;
+		for(PKBVersion possibleVersion: PKBVersion.values()) {
+			if(possibleVersion.matchingMagicKeys(key1, key2, key3)) {
+				pkbVersion = possibleVersion;
 			}
 		}
-		if (key2 != MAGIC_KEY_2) {
-			if (!resurrected || (key2 != RESURRECT_MAGIC_KEY_2)) {
-				throw new IllegalStateException("Illegal magic key2=" + key2);
-			}
+		if(pkbVersion == null) {
+			throw new IllegalStateException("Illegal magic keys={" + key1 + ", " + key2+ ", " + key3 + "}");
 		}
-		if (key3 != MAGIC_KEY_3) {
-			if (!resurrected || (key3 != RESURRECT_MAGIC_KEY_3)) {
-				throw new IllegalStateException("Illegal magic key3=" + key3);
-			}
-		}
-		this.resurrected = resurrected;
+		this.pkbVersion = pkbVersion;
 		firstMagicIdentifier = buffer.getInt();
-		if (this.resurrected) {
+		if (this.pkbVersion.hasExtraBufferData()) {
 			someResurrectedIdentifier = buffer.getInt();
 			System.out.println("Some resurrected identifier: " + someResurrectedIdentifier);
 		} else {
@@ -75,7 +59,7 @@ public class HorriblePkbParser {
 		System.out.println("Finished reading strings at: " + buffer.position());
 		System.out.println("Finished with remaining: " + buffer.remaining());
 		buffer.position(initialPosition);
-		if (this.resurrected) {
+		if (this.pkbVersion.hasExtraBufferData()) {
 			secondMagicIdentifier = buffer.getInt();
 		} else {
 			secondMagicIdentifier = buffer.getLong();
@@ -83,7 +67,7 @@ public class HorriblePkbParser {
 		System.out.println("firstmagic: " + firstMagicIdentifier);
 		System.out.println("strings offset: " + stringDataOffset);
 		System.out.println("secondmagic: " + secondMagicIdentifier);
-		if (this.resurrected) {
+		if (this.pkbVersion.hasExtraBufferData()) {
 			resurrectBuffer = new int[someResurrectedIdentifier * 2];
 			for (int i = 0; i < resurrectBuffer.length; i++) {
 				resurrectBuffer[i] = buffer.getInt(); // Read some 39 DWORDs, whatever it is
@@ -131,15 +115,19 @@ public class HorriblePkbParser {
 	public List<PKBChunk> getChunks() {
 		return chunks;
 	}
+	
+	public PKBVersion getVersion() {
+		return pkbVersion;
+	}
 
 	public ByteBuffer toBuffer() {
 		int byteLength = 12;
 		byteLength += 4; // first magic
-		if (this.resurrected) {
+		if (this.pkbVersion.hasExtraBufferData()) {
 			byteLength += 4; // some resurrect magic
 		}
 		byteLength += 4; // string offset location info
-		if (this.resurrected) {
+		if (this.pkbVersion.hasExtraBufferData()) {
 			byteLength += 4;
 			byteLength += resurrectBuffer.length * 4;
 		} else {
@@ -154,21 +142,16 @@ public class HorriblePkbParser {
 			byteLength += string.length() + 1;
 		}
 		final ByteBuffer buffer = ByteBuffer.allocate(byteLength).order(ByteOrder.LITTLE_ENDIAN);
-		if (resurrected) {
-			buffer.putInt(RESURRECT_MAGIC_KEY_1);
-			buffer.putInt(RESURRECT_MAGIC_KEY_2);
-			buffer.putInt(RESURRECT_MAGIC_KEY_3);
-		} else {
-			buffer.putInt(MAGIC_KEY_1);
-			buffer.putInt(MAGIC_KEY_2);
-			buffer.putInt(MAGIC_KEY_3);
-		}
+		buffer.putInt(this.pkbVersion.getMagicKey1());
+		buffer.putInt(this.pkbVersion.getMagicKey2());
+		buffer.putInt(this.pkbVersion.getMagicKey3());
+		
 		buffer.putInt(firstMagicIdentifier);
-		if (this.resurrected) {
+		if (this.pkbVersion.hasExtraBufferData()) {
 			buffer.putInt(someResurrectedIdentifier);
 		}
 		buffer.putInt(stringsOffset);
-		if (this.resurrected) {
+		if (this.pkbVersion.hasExtraBufferData()) {
 			buffer.putInt((int) secondMagicIdentifier);
 			for (int i = 0; i < resurrectBuffer.length; i++) {
 				buffer.putInt(resurrectBuffer[i]);

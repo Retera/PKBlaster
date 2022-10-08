@@ -775,7 +775,7 @@ public class HorriblePKBlasterPanel extends JPanel {
 											}
 										}
 										data.clear();
-									} else if (chunkTypeName.equals("CLayerCompileCache")) {
+									} else if (currentPKB.getVersion().likelyToUseCLayerCompileCache() && chunkTypeName.equals("CLayerCompileCache")) {
 										final ByteBuffer data = c.getChunkData();
 										data.order(ByteOrder.LITTLE_ENDIAN);
 										data.clear();
