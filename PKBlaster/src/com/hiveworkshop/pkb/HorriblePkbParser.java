@@ -13,7 +13,7 @@ import com.hiveworkshop.wc3.units.objectdata.War3ID;
 
 public class HorriblePkbParser {
 	public static final Map<Integer, Set<Integer>> MESSAGE_TYPES_TO_LENS = new TreeMap<>();
-	private final PKBVersion pkbVersion;
+	private PKBVersion pkbVersion;
 	private final int someResurrectedIdentifier;
 	private final List<String> strings = new ArrayList<>();
 	private final List<PKBChunk> chunks = new ArrayList<>();
@@ -118,6 +118,10 @@ public class HorriblePkbParser {
 	
 	public PKBVersion getVersion() {
 		return pkbVersion;
+	}
+	
+	public void setVersion(PKBVersion pkbVersion) {
+		this.pkbVersion = pkbVersion;
 	}
 
 	public ByteBuffer toBuffer() {

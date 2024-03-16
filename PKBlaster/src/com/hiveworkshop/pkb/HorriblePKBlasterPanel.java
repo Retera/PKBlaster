@@ -928,6 +928,43 @@ public class HorriblePKBlasterPanel extends JPanel {
 			automationTabbedPane.addTab("Sampler Data Colorize", colorize);
 		}
 
+		{
+			final JPanel colorize = new JPanel();
+			final JLabel introNote1 = new JLabel(
+					"This changes the headers but probably will not work.");
+			colorize.add(introNote1);
+			
+			JComboBox<PKBVersion> versionBox = new JComboBox<>(PKBVersion.values());
+			
+			final JButton performSwap = new JButton("Set Version!");
+			performSwap.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(final ActionEvent e) {
+					try {
+						if (currentPKB == null) {
+							JOptionPane.showMessageDialog(HorriblePKBlasterPanel.this, "No file loaded!", "Error",
+									JOptionPane.ERROR_MESSAGE);
+						} else {
+							currentPKB.setVersion((PKBVersion)versionBox.getSelectedItem());
+						}
+					} catch (final Exception exc) {
+						exc.printStackTrace();
+						ExceptionPopup.display(exc);
+					}
+				}
+			});
+
+			final GroupLayout colorSwapLayout = new GroupLayout(colorize);
+			colorSwapLayout.setHorizontalGroup(colorSwapLayout.createParallelGroup().addComponent(introNote1)
+					.addComponent(versionBox)
+					.addComponent(performSwap));
+			colorSwapLayout.setVerticalGroup(colorSwapLayout.createSequentialGroup().addComponent(introNote1)
+					.addComponent(versionBox)
+					.addComponent(performSwap));
+			colorize.setLayout(colorSwapLayout);
+
+			automationTabbedPane.addTab("Set Game Version", colorize);
+		}
 		tabbedPane.addTab("Automation", automationTabbedPane);
 
 	}
